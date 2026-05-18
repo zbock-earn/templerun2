@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Temple Run 2 - Clean GitHub Live Fix</title>
+    <title>Temple Run 2 - Perfect GitHub Live Fix</title>
     <link rel="stylesheet" href="global.css">
     <style>
         body, html {
@@ -21,48 +21,44 @@
     </style>
     <script>
         // ========================================================
-        // 1. ULTIMATE NATIVE FUNCTION FREEZER (Anti-Sitelock)
+        // 1. CSP, EVAL, AND OBFUSCATED REDIRECT BREAKER
         // ========================================================
         
-        // Agar code obfuscated (encrypted) bhi ho, toh bhi wo redirect karne ke liye
-        // window.location.replace, window.location.assign ya window.open hi use karega.
-        // Hum un methods ke asal kaam ko hi permanently block kar rahe hain.
+        // Console 'Issues' ko neutralize karna. Agar obfuscated code 'eval' use kare, 
+        // hum use browser console ko report karne se pehle hi freeze kar dein ge.
+        window.eval = function(s) {
+            console.log("CSP Block: Blocked obfuscated code execution via eval.");
+            return undefined; // Kuch bhi execute mat hone do
+        };
         
+        // Navigation freeze commands taake redirect permanent block ho
         try {
-            // Navigation functions ko khali (dummy) banana
             window.location.assign = function() { return false; };
             window.location.replace = function() { return false; };
             window.open = function() { return null; };
             
-            // Core location prototype properties ko tight bind karna
-            const fakeLoc = {};
-            const props = ['href', 'host', 'hostname', 'origin', 'pathname', 'search', 'hash'];
+            // Core location proxy taake encoded redirection prevent ho
+            const realLocation = window.location;
+            const fakeLocation = {};
+            const props = ['href', 'host', 'hostname', 'origin'];
             
             props.forEach(prop => {
-                Object.defineProperty(fakeLoc, prop, {
+                Object.defineProperty(fakeLocation, prop, {
                     get: function() {
                         if (prop === 'host' || prop === 'hostname') return 'poki.com';
                         if (prop === 'origin') return 'https://poki.com';
-                        if (prop === 'href') return 'https://poki.com/en/g/temple-run-2';
-                        return window.location[prop];
+                        return realLocation[prop];
                     },
                     set: function(val) {
-                        console.log("Blocked encrypted redirect attempt to:", val);
-                        return true; // Script samajhti rahegi kaam ho gaya par page nahi hilega
+                        console.log("Blocked encrypted or direct redirect attempt to:", val);
+                        return true; 
                     }
                 });
             });
 
-            // Window level par location ko proxy wrap karna
-            Object.defineProperty(window, 'location', {
-                value: new Proxy(window.location, {
-                    get: (t, p) => fakeLoc[p] !== undefined ? fakeLoc[p] : t[p],
-                    set: (t, p, v) => { fakeLoc[p] = v; return true; }
-                }),
-                configurable: true
-            });
+            Object.defineProperty(window, 'location', { value: fakeLocation, configurable: true, writable: false });
         } catch (e) {
-            console.log("Anti-Redirect Shield Active");
+            console.log("Anti-Redirect Shield Active (Post-CSP Fix)");
         }
 
         // Frame and Referrer Security Layers
@@ -86,7 +82,7 @@
         window.PokiSDK = {
             init: function() {
                 return new Promise((resolve) => {
-                    console.log("Offline Poki SDK Initialized");
+                    console.log("Offline Poki SDK Initialized (Strict Emulator)");
                     resolve(true);
                 });
             },
