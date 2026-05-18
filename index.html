@@ -20,6 +20,38 @@
         }
     </style>
     <script>
+        // ========================================================
+        // 1. SITELOCK & REDIRECT BREAKER (GitHub Hosting Fix)
+        // ========================================================
+        
+        // Poki ki tarf se kisi bhi auto-redirect ko block karne ke liye
+        window.onbeforeunload = function() {
+            return "Block redirect?";
+        };
+
+        // Window location (hostname) ko proxy ke zariye fake karna taake game ko lage wo poki par hai
+        Object.defineProperty(window, 'location', {
+            value: new Proxy(window.location, {
+                get: function(target, property) {
+                    if (property === 'host' || property === 'hostname') {
+                        return 'poki.com';
+                    }
+                    return target[property];
+                }
+            }),
+            configurable: true
+        });
+
+        // Referrer header ko fake karna
+        Object.defineProperty(document, 'referrer', {
+            get: function() { return 'https://poki.com/'; },
+            configurable: true
+        });
+
+        // ========================================================
+        // 2. GLOBAL GAME FUNCTIONS & POKI SDK EMULATOR
+        // ========================================================
+
         // Global updateProgress function jo game dhoond raha hai
         window.updateProgress = function(progress) {
             console.log("Global Loading Progress: ", progress);
