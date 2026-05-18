@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Temple Run 2 - Ultimate GitHub Fix</title>
+    <title>Temple Run 2 - Clean Live Fix v4</title>
     <link rel="stylesheet" href="global.css">
     <style>
         body, html {
@@ -21,55 +21,67 @@
     </style>
     <script>
         // ========================================================
-        // 1. HARD NAVIGATION FREEZER (Anti-Hex & Anti-Obfuscation)
+        // 1. THE ULTIMATE NETWORK INTERCEPTOR & REDIRECT DESTROYER
         // ========================================================
         
-        // Browser ko page tabdeel karne se sakhti se rokna
+        // Kisi bhi tareeqe ki redirection tabeer karne se browser ko sakhti se rokna
         window.onbeforeunload = function() { return "Redirection Blocked"; };
 
+        // 🟢 LAYER A: Network interceptor for fetch API
+        const originalFetch = window.fetch;
+        window.fetch = async function(...args) {
+            const url = args[0] ? args[0].toString() : "";
+            // Agar Poki ki internal ad, sitelock checking ya metrics requests hoon toh unhein fake response do
+            if (url.includes('poki.com') || url.includes('sitelock')) {
+                console.log("🛡️ Intercepted Poki Fetch Request:", url);
+                return new Response(JSON.stringify({ sitelock: false, allowed: true, status: "ok" }), {
+                    status: 200,
+                    headers: { 'Content-Type': 'application/json' }
+                });
+            }
+            return originalFetch.apply(this, args);
+        };
+
+        // 🟢 LAYER B: Network interceptor for XMLHttpRequest (XHR)
+        const originalXHR = window.XMLHttpRequest.prototype.open;
+        window.XMLHttpRequest.prototype.open = function(method, url, ...rest) {
+            if (url.includes('poki.com') || url.includes('sitelock')) {
+                console.log("🛡️ Intercepted Poki XHR Request:", url);
+                // Request ko fake local destination par mod dena taake error na aaye aur block bhi ho jaye
+                url = "data:application/json,{\"sitelock\":false,\"allowed\":true}";
+            }
+            return originalXHR.apply(this, [method, url, ...rest]);
+        };
+
+        // 🟢 LAYER C: Navigation Properties Freeze
         try {
-            // Location methods ko permanently crash kar dena taake redirect trigger hi na ho
             window.location.assign = function() { return false; };
             window.location.replace = function() { return false; };
             window.open = function() { return null; };
 
-            // Pure window environment mein 'top', 'parent' aur 'self' ko freeze karna
-            // Is se unka code frame break karke baahar nahi nikal sakega
-            Object.defineProperty(window, 'top', { get: function() { return window; }, configurable: false });
-            Object.defineProperty(window, 'parent', { get: function() { return window; }, configurable: false });
-            Object.defineProperty(window, 'self', { get: function() { return window; }, configurable: false });
+            const locationShield = {
+                get: function(target, prop) {
+                    if (prop === 'host' || prop === 'hostname') return 'poki.com';
+                    if (prop === 'origin') return 'https://poki.com';
+                    if (prop === 'href') return 'https://poki.com/en/g/temple-run-2';
+                    return target[prop];
+                },
+                set: function(target, prop, value) {
+                    console.warn("🛡️ Poki Navigation Attempt Terminated:", value);
+                    return true; 
+                }
+            };
 
-            // Location object ki values ko object level par mock karna
-            const locationMock = {};
-            const keys = ['href', 'host', 'hostname', 'origin', 'pathname'];
+            window.location = new Proxy(window.location, locationShield);
+            document.location = new Proxy(document.location, locationShield);
             
-            keys.forEach(key => {
-                Object.defineProperty(locationMock, key, {
-                    get: function() {
-                        if (key === 'host' || key === 'hostname') return 'poki.com';
-                        if (key === 'origin') return 'https://poki.com';
-                        if (key === 'href') return 'https://poki.com/en/g/temple-run-2';
-                        return window.location[key];
-                    },
-                    set: function(val) {
-                        console.warn("🛡️ Encodded Redirect Blocked:", val);
-                        return true; 
-                    }
-                });
-            });
-
-            // Window ki apni location property ko completely overwrite aur lock karna
-            Object.defineProperty(window, 'location', {
-                value: locationMock,
-                writable: false,
-                configurable: false
-            });
-            
+            Object.defineProperty(window, 'top', { get: function() { return window; } });
+            Object.defineProperty(window, 'parent', { get: function() { return window; } });
+            Object.defineProperty(window, 'self', { get: function() { return window; } });
         } catch (e) {
-            console.log("Nuclear shield active");
+            console.log("Shield active");
         }
 
-        // Referrer header spoofing
         Object.defineProperty(document, 'referrer', {
             get: function() { return 'https://poki.com/'; },
             configurable: true
