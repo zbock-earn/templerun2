@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Temple Run 2 - 100% Offline Local Fix v2</title>
+    <link rel="stylesheet" href="global.css">
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #000;
+        }
+        #game-container {
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+    <script>
+        // Global updateProgress function jo game dhoond raha hai
+        window.updateProgress = function(progress) {
+            console.log("Global Loading Progress: ", progress);
+        };
+
+        // Complete Poki SDK Emulator
+        window.PokiSDK = {
+            init: function() {
+                return new Promise((resolve) => {
+                    console.log("Offline Poki SDK Initialized");
+                    resolve(true);
+                });
+            },
+            gameLoadingStart: function() { console.log("Game Loading Started..."); },
+            gameLoadingProgress: function(progress) { console.log("Loading Progress: ", progress); },
+            gameLoadingFinished: function() { console.log("Game Loading Finished!"); },
+            gameplayStart: function() { console.log("Local Gameplay Started"); },
+            gameplayStop: function() { console.log("Local Gameplay Stopped"); },
+            commercialBreak: function() {
+                return new Promise((resolve) => { resolve(true); });
+            },
+            rewardedBreak: function() {
+                return new Promise((resolve) => { resolve(true); });
+            }
+        };
+    </script>
+</head>
+<body>
+
+    <div id="game-container"></div>
+
+    <script src="772.bundle.js"></script>
+    <script src="bundle.js"></script>
+
+</body>
+</html>
