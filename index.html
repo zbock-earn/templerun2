@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Temple Run 2 - Clean GitHub Live</title>
+    <title>Temple Run 2 - Clean GitHub Live Fix</title>
     <link rel="stylesheet" href="global.css">
     <style>
         body, html {
@@ -21,42 +21,55 @@
     </style>
     <script>
         // ========================================================
-        // 1. ADVANCED DOMAIN & NAVIGATION FREEZER
+        // 1. ULTIMATE NATIVE FUNCTION FREEZER (Anti-Sitelock)
         // ========================================================
         
-        // Kisi bhi kism ke location.replace ya location.assign redirect ko permanently neutralise karna
+        // Agar code obfuscated (encrypted) bhi ho, toh bhi wo redirect karne ke liye
+        // window.location.replace, window.location.assign ya window.open hi use karega.
+        // Hum un methods ke asal kaam ko hi permanently block kar rahe hain.
+        
         try {
-            window.location.assign = function(url) { return false; };
-            window.location.replace = function(url) { return false; };
+            // Navigation functions ko khali (dummy) banana
+            window.location.assign = function() { return false; };
+            window.location.replace = function() { return false; };
+            window.open = function() { return null; };
             
-            // Location properties ko tightly wrap karna taake scripts ko hamesha poki.com nazar aaye
-            const proxyLocation = new Proxy(window.location, {
-                get: function(target, prop) {
-                    if (prop === 'host' || prop === 'hostname') return 'poki.com';
-                    if (prop === 'origin') return 'https://poki.com';
-                    if (prop === 'href') return 'https://poki.com/en/g/temple-run-2';
-                    return target[prop];
-                },
-                set: function(target, prop, val) {
-                    // Agar script khud se redirect karne ke liye href set kare, toh bypass kar do
-                    if (prop === 'href' || val.includes('sitelock')) return true;
-                    target[prop] = val;
-                    return true;
-                }
+            // Core location prototype properties ko tight bind karna
+            const fakeLoc = {};
+            const props = ['href', 'host', 'hostname', 'origin', 'pathname', 'search', 'hash'];
+            
+            props.forEach(prop => {
+                Object.defineProperty(fakeLoc, prop, {
+                    get: function() {
+                        if (prop === 'host' || prop === 'hostname') return 'poki.com';
+                        if (prop === 'origin') return 'https://poki.com';
+                        if (prop === 'href') return 'https://poki.com/en/g/temple-run-2';
+                        return window.location[prop];
+                    },
+                    set: function(val) {
+                        console.log("Blocked encrypted redirect attempt to:", val);
+                        return true; // Script samajhti rahegi kaam ho gaya par page nahi hilega
+                    }
+                });
             });
 
-            Object.defineProperty(window, 'location', { value: proxyLocation, configurable: true, writable: false });
-            Object.defineProperty(document, 'location', { value: proxyLocation, configurable: true, writable: false });
+            // Window level par location ko proxy wrap karna
+            Object.defineProperty(window, 'location', {
+                value: new Proxy(window.location, {
+                    get: (t, p) => fakeLoc[p] !== undefined ? fakeLoc[p] : t[p],
+                    set: (t, p, v) => { fakeLoc[p] = v; return true; }
+                }),
+                configurable: true
+            });
         } catch (e) {
-            console.log("Navigation freeze active");
+            console.log("Anti-Redirect Shield Active");
         }
 
-        // Frame hijacking aur window environment safety layers
+        // Frame and Referrer Security Layers
         window.top = window;
         window.parent = window;
         window.self = window;
 
-        // Document Referrer header ko force-mock karna
         Object.defineProperty(document, 'referrer', {
             get: function() { return 'https://poki.com/'; },
             configurable: true
@@ -86,7 +99,6 @@
             rewardedBreak: function() { return new Promise((r) => r(true)); }
         };
 
-        // PokiSDK variable ko lock karna taake game code isko badal na sakay
         Object.defineProperty(window, 'PokiSDK', { writable: false, configurable: false });
     </script>
 </head>
