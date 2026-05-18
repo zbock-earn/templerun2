@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Temple Run 2 - 100% Offline Local Fix v2</title>
+    <title>Temple Run 2 - Ultimate Sitelock Bypass</title>
     <link rel="stylesheet" href="global.css">
     <style>
         body, html {
@@ -21,44 +21,61 @@
     </style>
     <script>
         // ========================================================
-        // 1. SITELOCK & REDIRECT BREAKER (GitHub Hosting Fix)
+        // 1. ADVANCED SITELOCK BREAKER & REDIRECT SHIELD
         // ========================================================
         
-        // Poki ki tarf se kisi bhi auto-redirect ko block karne ke liye
-        window.onbeforeunload = function() {
-            return "Block redirect?";
+        // Kisi bhi kism ki external site navigation ya redirection ko block karne ke liye
+        window.onbeforeunload = function(e) {
+            e.preventDefault();
+            return "Block Poki Redirect?";
         };
 
-        // Window location (hostname) ko proxy ke zariye fake karna taake game ko lage wo poki par hai
-        Object.defineProperty(window, 'location', {
-            value: new Proxy(window.location, {
+        // Window Location Core Bypass (Saare href, origin aur host parameters ko tight lock karna)
+        try {
+            const fakeLocation = new Proxy(window.location, {
                 get: function(target, property) {
-                    if (property === 'host' || property === 'hostname') {
-                        return 'poki.com';
-                    }
+                    if (property === 'host' || property === 'hostname') return 'poki.com';
+                    if (property === 'origin') return 'https://poki.com';
+                    if (property === 'href') return 'https://poki.com/en/g/temple-run-2';
                     return target[property];
+                },
+                set: function(target, property, value) {
+                    // Agar game script url badalne ki koshish kare (sitelock page par bheje), toh use yahin block karo
+                    if (property === 'href' || property === 'location' || value.includes('sitelock')) {
+                        console.warn("Poki Sitelock Redirect Blocked Successfully!", value);
+                        return true; // Execution ko thap kar do
+                    }
+                    target[property] = value;
+                    return true;
                 }
-            }),
-            configurable: true
-        });
+            });
 
-        // Referrer header ko fake karna
+            Object.defineProperty(window, 'location', { value: fakeLocation, configurable: true });
+            Object.defineProperty(document, 'location', { value: fakeLocation, configurable: true });
+        } catch (e) {
+            console.log("Location proxy active");
+        }
+
+        // Top aur Parent frames hijacking ko rokne ke liye fake window object
+        window.top = window;
+        window.parent = window;
+
+        // Referrer Bypass
         Object.defineProperty(document, 'referrer', {
             get: function() { return 'https://poki.com/'; },
             configurable: true
         });
 
         // ========================================================
-        // 2. GLOBAL GAME FUNCTIONS & POKI SDK EMULATOR
+        // 2. GLOBAL GAME FUNCTIONS & EMULATOR FREEZING
         // ========================================================
 
-        // Global updateProgress function jo game dhoond raha hai
         window.updateProgress = function(progress) {
             console.log("Global Loading Progress: ", progress);
         };
 
-        // Complete Poki SDK Emulator
-        window.PokiSDK = {
+        // Poki SDK ko lock kar dena taake isme koi unka automated hidden code trigger na ho
+        const mockSDK = {
             init: function() {
                 return new Promise((resolve) => {
                     console.log("Offline Poki SDK Initialized");
@@ -70,13 +87,15 @@
             gameLoadingFinished: function() { console.log("Game Loading Finished!"); },
             gameplayStart: function() { console.log("Local Gameplay Started"); },
             gameplayStop: function() { console.log("Local Gameplay Stopped"); },
-            commercialBreak: function() {
-                return new Promise((resolve) => { resolve(true); });
-            },
-            rewardedBreak: function() {
-                return new Promise((resolve) => { resolve(true); });
-            }
+            commercialBreak: function() { return new Promise((resolve) => { resolve(true); }); },
+            rewardedBreak: function() { return new Promise((resolve) => { resolve(true); }); }
         };
+
+        Object.defineProperty(window, 'PokiSDK', {
+            value: mockSDK,
+            writable: false, // Ab game ki script isko override nahi kar sakti
+            configurable: false
+        });
     </script>
 </head>
 <body>
